@@ -9,12 +9,11 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent
 
 # 실습 폴더의 이미지 경로
-image_path = BASE_DIR.parent / "실습" / "src" / "images" / "basketball_crop.jpg"
+image_path = BASE_DIR.parent/ "실습" / "src" / "images" / "basketball_crop.jpg"
 
 basketball = cv2.imread(str(image_path))
 
 basketball_rgb = cv2.cvtColor(basketball, cv2.COLOR_BGR2RGB)
-
 # LAB 색공간 변환 및 Binary Mask 생성
 basketball_lab = cv2.cvtColor(basketball, cv2.COLOR_BGR2LAB)
 
@@ -54,13 +53,13 @@ final_result = cv2.bitwise_and(
 # 6. 결과 시각화
 plt.figure(figsize=(16, 8))
 
-plt.subplot(2, 3, 1), plt.imshow(basketball_rgb), plt.title("Original")
+plt.subplot(2, 2, 1), plt.imshow(basketball_rgb), plt.title("Original")
 
-plt.subplot(2, 3, 3), plt.imshow(mask_lab, cmap="gray"), plt.title("LAB Mask")
+plt.subplot(2, 2, 2), plt.imshow(mask_lab, cmap="gray"), plt.title("LAB Mask")
 
-plt.subplot(2, 3, 5), plt.imshow(mask_final, cmap="gray"), plt.title("Final Mask")
+plt.subplot(2, 2, 3), plt.imshow(mask_final, cmap="gray"), plt.title("Final Mask")
 
-plt.subplot(2, 3, 6), plt.imshow(final_result), plt.title("Final Basketball")
+plt.subplot(2, 2, 4), plt.imshow(final_result), plt.title("Final Basketball")
 
 for ax in plt.gcf().axes:
     ax.axis("off")
