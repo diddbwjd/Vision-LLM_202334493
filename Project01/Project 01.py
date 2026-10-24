@@ -7,12 +7,13 @@ from mediapipe.tasks.python import vision
 
 pipeline = (
     "v4l2src device=/dev/video0 ! "
-    "image/jpeg,width=1280,height=720,framerate=30/1 ! "
-    "jpegdec ! videoconvert ! video/x-raw,format=BGR ! "
+    "video/x-raw,format=YUY2,width=640,height=480,framerate=30/1 ! "
+    "videoconvert ! video/x-raw,format=BGR ! "
     "queue leaky=downstream max-size-buffers=1 "
     "max-size-bytes=0 max-size-time=0 ! "
     "appsink drop=true max-buffers=1 sync=false"
 )
+
 cap = cv2.VideoCapture(pipeline, cv2.CAP_GSTREAMER)
 # 공 색깔 범위 설정
 green_lower = np.array([30, 60, 90], dtype=np.uint8) 
@@ -24,7 +25,7 @@ prev_center = None
 
 # 손 검출 (모델 가져오기 및 option 설정)
 base_option = python.BaseOptions(
-    model_asset_path="../실습/src/models/MediaPipe/hand_landmarker.task")
+    model_asset_path="src/models/MediaPipe/hand_landmarker.task")
 options = vision.HandLandmarkerOptions( base_options = base_option, num_hands=1 )
 hand_detector = vision.HandLandmarker.create_from_options(options)
 connections = vision.HandLandmarksConnections.HAND_CONNECTIONS
@@ -33,7 +34,10 @@ connections = vision.HandLandmarksConnections.HAND_CONNECTIONS
 count = 0
 prev_touching = False
 prev_direction = "STILL"
+direction="STILL"
+detected="False"
 rebounded = False
+center="None"
 
 while True:
     ret, frame = cap.read()
@@ -61,7 +65,7 @@ while True:
                 detected=True
                 #공 추적하여 그리기
                 cv2.circle(frame,center,radius,(0,255,0),2)
-                
+                direction = "STILL"
                 # 공의 움직임 추적(상하 움직임)
                 if prev_center is not None:
                     y_change = center[1] - prev_center[1]
