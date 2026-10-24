@@ -29,11 +29,20 @@ options = vision.HandLandmarkerOptions( base_options = base_option, num_hands=1 
 hand_detector = vision.HandLandmarker.create_from_options(options)
 connections = vision.HandLandmarksConnections.HAND_CONNECTIONS
 
+#공 count 변수 정하기
+count = 0
+prev_touching = False
+prev_direction = "STILL"
+rebounded = False
+
 while True:
     ret, frame = cap.read()
 
     if not ret:
         break
+    #공과 손의 터치 초기화
+    touching = False
+    
     #공 색상 검출 및 전처리 과정
     gaussian_blur = cv2.GaussianBlur(frame, (5,5), 0) 
     ball_lab =cv2.cvtColor(gaussian_blur, cv2.COLOR_BGR2LAB)
@@ -62,49 +71,65 @@ while True:
                         direction = "DOWN"
                     else:
                         direction = "STILL"
-            prev_center = center
+                        
+                    # 공의 방향 변화 확인
+                    if prev_direction == "DOWN" and direction == "UP":
+                        rebounded = True
+                        
+                    if direction != "STILL":
+                        prev_direction = direction
+                prev_center = center
     if not detected:
         prev_center = None
         
-    # 이미지 좌우 반전 및 RGB로 색공간 변환 (전처리)
-    frame = cv2.flip(frame, 0)
+    # 이미지 전처리(손 검출을 위한)
+    # frame = cv2.flip(frame, 0)
     frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    # 손 검출
-    result = hand_detector.detect(
-    mp.Image(image_format=mp.ImageFormat.SRGB, data=frame_rgb) )
+    # 손 검출 결과
+    result = hand_detector.detect( mp.Image(image_format=mp.ImageFormat.SRGB, data=frame_rgb) )
     
-   # 손이 검출되었을 경우
+    # 손이 검출되었을 경우
     if result.hand_landmarks:
         for hand in result.hand_landmarks:
-            # 프레임 크기 가져오기
+            # 프레임 크기 가져오기, 좌표 변환
             h, w = frame.shape[:2]
+            points = [(int(p.x * w), int(p.y * h)) for p in hand]
+            
+            # 손 관절 연결선 그리기 
+            for c in connections:
+                cv2.line( frame,points[c.start],points[c.end],(0, 255, 0),2 )
 
-        # 손의 21개 Landmark를 픽셀 좌표로 변환
-        points = [
-            (int(p.x * w), int(p.y * h))
-            for p in hand
-        ]
-
-        # 손 관절 연결선 그리기
-        for c in connections:
-            cv2.line(
-                frame,
-                points[c.start],
-                points[c.end],
-                (0, 255, 0),
-                2
-            )
-
-        # 손 관절 위치에 점 그리기
-        for point in points:
-            cv2.circle(frame, point, 4, (255, 0, 0), -1)
-        hand_points = np.array(points, dtype=np.int32)
-        hand_hull = cv2.convexHull(hand_points)
-        cv2.polylines(frame, [hand_hull], True, (0, 255, 255), 2)
+             # 손 관절 위치에 점 그리기
+            for point in points:
+                 cv2.circle(frame, point, 4, (255, 0, 0), -1)
+            hand_points = np.array(points, dtype=np.int32)
+            hand_hull = cv2.convexHull(hand_points)
+    
+             #손 전체적으로 그리기
+            cv2.polylines(frame, [hand_hull], True, (0, 255, 255), 2)
+            # 손과 공의 거리 탐지
+            if detected:
+                distance = cv2.pointPolygonTest(hand_hull, center, True)
+                if distance >= -radius:
+                    touching = True
+        # 공과 손의 관계 업데이트
+        new_touch = touching and not prev_touching
+        #카운트
+        if new_touch and rebounded:
+            count += 1
+            rebounded = False
+        # 반동 후 손에 닿지 않고 다시 내려가면 초기화
+        elif rebounded and direction == "DOWN" and not touching:
+            count = 0
+            rebounded = False
+            
+        prev_touching = touching
                 
 
-
-    cv2.imshow("VideoCapture with GStreamer", frame)
+    cv2.putText(frame, f"Count: {count}", (30, 50),cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+    cv2.putText(frame, f"Direction: {direction}", (30, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
+    cv2.putText(frame, f"Touching: {touching}", (30, 150), cv2.FONT_HERSHEY_SIMPLEX, 0.8,(0, 255, 255), 2)
+    cv2.imshow("Green BAll Bound State", frame)
     
     if cv2.waitKey(1) & 0xFF == ord("q"):
             break
