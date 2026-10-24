@@ -7,8 +7,8 @@ from mediapipe.tasks.python import vision
 
 pipeline = (
     "v4l2src device=/dev/video0 ! "
-    "video/x-raw,format=YUY2,width=640,height=480,framerate=30/1 ! "
-    "videoconvert ! video/x-raw,format=BGR ! "
+    "image/jpeg,width=1280,height=720,framerate=30/1 ! "
+    "jpegdec ! videoconvert ! video/x-raw,format=BGR ! "
     "queue leaky=downstream max-size-buffers=1 "
     "max-size-bytes=0 max-size-time=0 ! "
     "appsink drop=true max-buffers=1 sync=false"
@@ -34,10 +34,8 @@ connections = vision.HandLandmarksConnections.HAND_CONNECTIONS
 count = 0
 prev_touching = False
 prev_direction = "STILL"
-direction="STILL"
-detected="False"
 rebounded = False
-center="None"
+
 
 while True:
     ret, frame = cap.read()
@@ -46,6 +44,9 @@ while True:
         break
     #공과 손의 터치 초기화
     touching = False
+    center=None
+    direction= "STILL"
+    detected=False
     
     #공 색상 검출 및 전처리 과정
     gaussian_blur = cv2.GaussianBlur(frame, (5,5), 0) 
@@ -112,10 +113,10 @@ while True:
              #손 전체적으로 그리기
             cv2.polylines(frame, [hand_hull], True, (0, 255, 255), 2)
             # 손과 공의 거리 탐지
-            if detected:
-                distance = cv2.pointPolygonTest(hand_hull, center, True)
-                if distance >= -radius:
-                    touching = True
+        if detected:
+            distance = cv2.pointPolygonTest(hand_hull, center, True)
+            if distance >= -radius:
+                touching = True
         # 공과 손의 관계 업데이트
         new_touch = touching and not prev_touching
         #카운트
@@ -132,7 +133,6 @@ while True:
 
     cv2.putText(frame, f"Count: {count}", (30, 50),cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
     cv2.putText(frame, f"Direction: {direction}", (30, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
-    cv2.putText(frame, f"Touching: {touching}", (30, 150), cv2.FONT_HERSHEY_SIMPLEX, 0.8,(0, 255, 255), 2)
     cv2.imshow("Green BAll Bound State", frame)
     
     if cv2.waitKey(1) & 0xFF == ord("q"):
