@@ -14,3 +14,8 @@ MAIN GPU 구현
 - torch.device("cpu") → torch.device("cuda")로 변경하여 GPU를 사용
 - 기존의 .to(device)를 통해 모델과 데이터를 GPU로 이동
 - torch.cuda.synchronize()를 추가하여 GPU 연산이 완료된 후 실행 시간을 측정
+
+IoU 함수 구현
+- calculate_iou() : 두 BBox의 좌표를 이용해 각 박스의 넓이 계산
+- max(), min()을 이용해 두 박스가 겹치는 영역의 좌표를 구하기
+- 두 BBox가 얼마나 겹치는지 0~1 사이의 값
