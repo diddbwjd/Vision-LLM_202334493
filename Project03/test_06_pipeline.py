@@ -43,10 +43,12 @@ def main():
                 items.append(item)
 
         elif choice == "2":
-            item = input("삭제할 물건: ").strip()
-
-            if item in items:
-                items.remove(item)
+            number = input("삭제할 물건 번호: ").strip()
+            if number.isdigit() and 1 <= int(number) <= len(items):
+                removed = items.pop(int(number) - 1)
+                print(f"{removed} 삭제 완료")
+            else:
+                print("잘못된 번호입니다.")
 
         elif choice == "3":
             break
