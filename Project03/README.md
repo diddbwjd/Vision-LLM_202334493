@@ -42,6 +42,7 @@ YOLO_PATH = BASE_DIR / "../src/models/yololln_int8.engin"
 
 ## 질문에 대한 답변
 Q gemma와 yolo 모델 연결: 탐지 물건을 받아오고 미탐지와 탐지 물건의 처리 방식
+
 A Gemma와 YOLO는 Python을 통해 연결했습니다. - python 리스트 연산 사용, 06 파일에서 필요할 때 호출하고 연결
 먼저 Gemma가 사용자의 외출 목적을 분석해 준비물 리스트를 생성하고, 사용자가 목록을 수정하면 YOLO가 카메라 영상에서 물건을 탐지합니다.
 YOLO가 탐지한 객체의 이름을 CLASS_MAP으로 영어에서 한국어로 변환하고 Gemma의 준비물 목록과 YOLO의 탐지 결과를 비교(리스트 집합으로 비교) 합니다.
