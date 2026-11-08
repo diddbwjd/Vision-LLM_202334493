@@ -7,6 +7,7 @@ from pathlib import Path
 from config import (
     SAMPLE_RATE,
     RECORD_SECONDS,
+    
     WHISPER_CLI_PATH,
     WHISPER_MODEL_PATH,
 )

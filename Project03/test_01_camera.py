@@ -1,6 +1,5 @@
 import cv2
 
-# 파이프라인
 pipeline = (
     "v4l2src device=/dev/video0 ! "
     "video/x-raw,format=YUY2,width=640,height=480,framerate=30/1 ! "
